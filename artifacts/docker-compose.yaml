@@ -1,0 +1,98 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+volumes:
+  orderer.example.com:
+  peer0.hq.example.com:
+  peer0.branch1.example.com:
+  peer0.branch2.example.com:
+
+networks:
+  byfn:
+services:
+  ca0:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-hq
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.hq.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/c9c8e54e2895865bb7d3201eaa61e0f7c134010ce10620bc0218b655418fc06d_sk
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.hq.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/c9c8e54e2895865bb7d3201eaa61e0f7c134010ce10620bc0218b655418fc06d_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/hq.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerHq
+    networks:
+      - byfn
+
+  ca1:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-branch1
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.branch1.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/330f775ee9f0fcf4667e7f6f11ba0e1c760c968bacb5b4df65d4375ce7eb415d_sk
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.branch1.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/330f775ee9f0fcf4667e7f6f11ba0e1c760c968bacb5b4df65d4375ce7eb415d_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/branch1.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerBranch1
+    networks:
+      - byfn
+
+  ca2:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-branch2
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.branch2.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/b132d1c004854fc1cf8849b2ca1442f6fe36e1d2308904e65a631e7363788302_sk
+    ports:
+      - "9054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.branch2.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/b132d1c004854fc1cf8849b2ca1442f6fe36e1d2308904e65a631e7363788302_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/branch2.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerBranch2
+    networks:
+      - byfn
+
+  orderer.example.com:
+    extends:
+      file:   base/docker-compose-base.yaml
+      service: orderer.example.com
+    container_name: orderer.example.com
+    networks:
+      - byfn
+
+  peer0.hq.example.com:
+    container_name: peer0.hq.example.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.hq.example.com
+    networks:
+      - byfn
+
+  peer0.branch1.example.com:
+    container_name: peer0.branch1.example.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.branch1.example.com
+    networks:
+      - byfn
+
+  peer0.branch2.example.com:
+    container_name: peer0.branch2.example.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.branch2.example.com
+    networks:
+      - byfn

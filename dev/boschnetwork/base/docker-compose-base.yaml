@@ -1,0 +1,147 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+services:
+
+  orderer.example.com:
+    container_name: orderer.example.com
+    image: hyperledger/fabric-orderer:latest
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+    - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+    - ../crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+    - ../crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+    - orderer.example.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+
+  peer0.packagerBosch.example.com:
+    container_name: peer0.packagerBosch.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.packagerBosch.example.com
+      - CORE_PEER_ADDRESS=peer0.packagerBosch.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.packagerBosch.example.com:7051
+      - CORE_PEER_LOCALMSPID=PackagerBoschMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/packagerBosch.example.com/peers/peer0.packagerBosch.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/packagerBosch.example.com/peers/peer0.packagerBosch.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.packagerBosch.example.com:/var/hyperledger/production
+    ports:
+      - 7051:7051
+      - 7053:7053
+
+  peer0.logistics.example.com:
+    container_name: peer0.logistics.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.logistics.example.com
+      - CORE_PEER_ADDRESS=peer0.logistics.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.logistics.example.com:7051
+      - CORE_PEER_LOCALMSPID=LogisticsMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/logistics.example.com/peers/peer0.logistics.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/logistics.example.com/peers/peer0.logistics.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.logistics.example.com:/var/hyperledger/production
+    ports:
+      - 8051:7051
+      - 8053:7053
+
+  peer0.adc.example.com:
+    container_name: peer0.adc.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.adc.example.com
+      - CORE_PEER_ADDRESS=peer0.adc.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.adc.example.com:7051
+      - CORE_PEER_LOCALMSPID=ADCMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/adc.example.com/peers/peer0.adc.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/adc.example.com/peers/peer0.adc.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.adc.example.com:/var/hyperledger/production
+    ports:
+      - 9051:7051
+      - 9053:7053
+
+  peer0.ldc.example.com:
+    container_name: peer0.ldc.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.ldc.example.com
+      - CORE_PEER_ADDRESS=peer0.ldc.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ldc.example.com:7051
+      - CORE_PEER_LOCALMSPID=LDCMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/ldc.example.com/peers/peer0.ldc.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/ldc.example.com/peers/peer0.ldc.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.ldc.example.com:/var/hyperledger/production
+    ports:
+      - 10051:7051
+      - 10053:7053
+
+  peer0.dealer.example.com:
+    container_name: peer0.dealer.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.dealer.example.com
+      - CORE_PEER_ADDRESS=peer0.dealer.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.dealer.example.com:7051
+      - CORE_PEER_LOCALMSPID=DealerMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/dealer.example.com/peers/peer0.dealer.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/dealer.example.com/peers/peer0.dealer.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.dealer.example.com:/var/hyperledger/production
+    ports:
+      - 11051:7051
+      - 11053:7053
+
+  peer0.retailer.example.com:
+    container_name: peer0.retailer.example.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.retailer.example.com
+      - CORE_PEER_ADDRESS=peer0.retailer.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.retailer.example.com:7051
+      - CORE_PEER_LOCALMSPID=RetailerMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/retailer.example.com/peers/peer0.retailer.example.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/retailer.example.com/peers/peer0.retailer.example.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.retailer.example.com:/var/hyperledger/production
+    ports:
+      - 12051:7051
+      - 12053:7053

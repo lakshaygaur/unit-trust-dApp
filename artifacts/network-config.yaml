@@ -1,0 +1,112 @@
+name: sample application
+x-type: hlfv1
+description: Sample Network
+version: '1.0'
+channels:
+  mychannel:
+    orderers:
+      - orderer.example.com
+    peers:
+      peer0.hq.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0.branch1.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0.branch2.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+organizations:
+  Hq:
+    mspid: HqMSP
+    peers:
+      - peer0.hq.example.com
+    certificateAuthorities:
+      - ca-hq
+    adminPrivateKey:
+      path: artifacts/crypto-config/peerOrganizations/hq.example.com/users/Admin@hq.example.com/msp/keystore/2140e89aec43fd39b057d00a37b48498401e28f8146864d30ad4350854006aba_sk
+    signedCert:
+      path: artifacts/crypto-config/peerOrganizations/hq.example.com/users/Admin@hq.example.com/msp/signcerts/Admin@hq.example.com-cert.pem
+  Branch1:
+    mspid: Branch1MSP
+    peers:
+      - peer0.branch1.example.com
+    certificateAuthorities:
+      - ca-branch1
+    adminPrivateKey:
+      path: artifacts/crypto-config/peerOrganizations/branch1.example.com/users/Admin@branch1.example.com/msp/keystore/f9893774a89d7044c0477d3596c8eb7fde81bfc465ea297edb00e0a9052c68c4_sk
+    signedCert:
+      path: artifacts/crypto-config/peerOrganizations/branch1.example.com/users/Admin@branch1.example.com/msp/signcerts/Admin@branch1.example.com-cert.pem
+  Branch2:
+    mspid: Branch2MSP
+    peers:
+      - peer0.branch2.example.com
+    certificateAuthorities:
+      - ca-branch2
+    adminPrivateKey:
+      path: artifacts/crypto-config/peerOrganizations/branch2.example.com/users/Admin@branch2.example.com/msp/keystore/271ff34e41b2f77830035c8dee0110808c297c89d6b500084b222e507f9fd4a4_sk
+    signedCert:
+      path: artifacts/crypto-config/peerOrganizations/branch2.example.com/users/Admin@branch2.example.com/msp/signcerts/Admin@branch2.example.com-cert.pem
+orderers:
+  orderer.example.com:
+    url: 'grpcs://localhost:7050'
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+    tlsCACerts:
+      path: artifacts/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
+peers:
+  peer0.hq.example.com:
+    url: 'grpcs://localhost:7051'
+    grpcOptions:
+      ssl-target-name-override: peer0.hq.example.com
+    tlsCACerts:
+      path: artifacts/crypto-config/peerOrganizations/hq.example.com/peers/peer0.hq.example.com/tls/ca.crt
+  peer0.branch1.example.com:
+    url: 'grpcs://localhost:8051'
+    grpcOptions:
+      ssl-target-name-override: peer0.branch1.example.com
+    tlsCACerts:
+      path: artifacts/crypto-config/peerOrganizations/branch1.example.com/peers/peer0.branch1.example.com/tls/ca.crt
+  peer0.branch2.example.com:
+    url: 'grpcs://localhost:9051'
+    grpcOptions:
+      ssl-target-name-override: peer0.branch2.example.com
+    tlsCACerts:
+      path: artifacts/crypto-config/peerOrganizations/branch2.example.com/peers/peer0.branch2.example.com/tls/ca.crt
+certificateAuthorities:
+  ca-hq:
+    url: 'https://localhost:7054'
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      path: artifacts/crypto-config/peerOrganizations/hq.example.com/ca/ca.hq.example.com-cert.pem
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    caName: ca-hq
+  ca-branch1:
+    url: 'https://localhost:8054'
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      path: artifacts/crypto-config/peerOrganizations/branch1.example.com/ca/ca.branch1.example.com-cert.pem
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    caName: ca-branch1
+  ca-branch2:
+    url: 'https://localhost:9054'
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      path: artifacts/crypto-config/peerOrganizations/branch2.example.com/ca/ca.branch2.example.com-cert.pem
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    caName: ca-branch2
