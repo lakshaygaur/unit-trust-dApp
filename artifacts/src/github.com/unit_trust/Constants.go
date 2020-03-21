@@ -1,0 +1,5 @@
+package main
+
+const FUND="FUND"
+const ACCOUNT="ACCOUNT"
+const TRANSACTION_HISTORY="TRANSACTION_HISTORY"

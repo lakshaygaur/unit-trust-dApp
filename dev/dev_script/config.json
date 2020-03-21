@@ -7,8 +7,8 @@
     },
     "channelName": "mychannel",
     "channelConfigPath": "../../artifacts/channel-artifacts/channel.tx",
-    "chaincodeName": "mycc",
-    "chaincodePath": "github.com/example_cc/go",
+    "chaincodeName": "unit_trust",
+    "chaincodePath": "github.com/unit_trust",
     "instantiateArgs":["a","100","b","200"],
     "username":"Jim"
 }

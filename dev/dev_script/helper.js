@@ -53,6 +53,7 @@ async function getClientForOrg (userorg, username) {
 
 var setupChaincodeDeploy = function() {
 	process.env.GOPATH = path.join(__dirname,'../', hfc.getConfigSetting('CC_SRC_PATH'));
+	console.log('====path',path.join(__dirname,'../', hfc.getConfigSetting('CC_SRC_PATH')))
 };
 
 var getRegisteredUser = async function(username, userOrg, isJson) {
