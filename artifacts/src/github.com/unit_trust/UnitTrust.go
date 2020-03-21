@@ -60,20 +60,28 @@ func (t *UnitTrustChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Respons
 	function, args := stub.GetFunctionAndParameters()
 	
 	if function == "delete" {
-		// Deletes an entity from its state
 		return t.delete(stub, args)
 	}
 	if function == "createFund" {
-		// Deletes an entity from its state
 		return t.CreateFund(stub, args)
 	}
 	if function == "readFund" {
-		// Deletes an entity from its state
 		return t.ReadFund(stub, args)
 	}
 	if function == "createAccount" {
-		// Deletes an entity from its state
 		return t.CreateAccount(stub, args)
+	}
+	if function == "applyAccount" {
+		return t.ApplyAccount(stub, args)
+	}
+	if function == "sellFund" {
+		return t.SellFund(stub, args)
+	}
+	if function == "readAllFunds" {
+		return t.ReadAllFunds(stub, args)
+	}
+	if function == "approveAccount" {
+		return t.ApproveAccount(stub, args)
 	}
 	logger.Errorf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", function)
 	return shim.Error(fmt.Sprintf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", function))
@@ -97,34 +105,6 @@ func (t *UnitTrustChaincode) delete(stub shim.ChaincodeStubInterface, args []str
 	return shim.Success(nil)
 }
 
-// Query callback representing the query of a chaincode
-func (t *UnitTrustChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	var A string // Entities
-	var err error
-
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the person to query")
-	}
-
-	A = args[0]
-
-	// Get the state from the ledger
-	Avalbytes, err := stub.GetState(A)
-	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to get state for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	if Avalbytes == nil {
-		jsonResp := "{\"Error\":\"Nil amount for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	logger.Infof("Query Response:%s\n", jsonResp)
-	return shim.Success(Avalbytes)
-}
 
 func main() {
 	err := shim.Start(new(UnitTrustChaincode))

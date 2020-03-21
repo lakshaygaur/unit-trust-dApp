@@ -108,7 +108,11 @@ function getErrorMessage(field) {
 ///////////////////////////////////////////////////////////////////////////////
 
 const mtct = require('./api/mtct')
+const agent = require('./api/agent')
+const investor = require('./api/investor')
 app.use('/mtct',mtct)
+app.use('/agent',agent)
+app.use('/investor',investor)
 
 
 // Register and enroll user

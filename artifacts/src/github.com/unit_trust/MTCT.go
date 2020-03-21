@@ -6,9 +6,10 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
+	"bytes"
 )
 
-  
+// Create Fund and make it available in the network
 func (t *UnitTrustChaincode) CreateFund(stub shim.ChaincodeStubInterface, args []string) pb.Response{
 
 	// args check : should be type, value, validFrom, validTo
@@ -47,7 +48,7 @@ func (t *UnitTrustChaincode) CreateFund(stub shim.ChaincodeStubInterface, args [
 	if err != nil {
 		return shim.Error("Failed to get timestamp: "+ err.Error())
 	}
-	compositeKey, err := stub.CreateCompositeKey(TRANSACTION_HISTORY,[]string{stub.GetTxID()})
+	compositeKey, err := stub.CreateCompositeKey(TRANSACTION_HISTORY,[]string{stub.GetTxID(),stub.GetTxID()})
 	if err != nil {
 		return shim.Error("Failed to generate TRANSACTION_HISTORY ID: "+ err.Error())
 	}
@@ -65,6 +66,7 @@ func (t *UnitTrustChaincode) CreateFund(stub shim.ChaincodeStubInterface, args [
 	return shim.Success(nil)
 }
 
+// Read a fund's info with TxnHistory
 func (t *UnitTrustChaincode) ReadFund(stub shim.ChaincodeStubInterface, args []string) pb.Response{
 	
 	// args check : should be fundId
@@ -79,11 +81,39 @@ func (t *UnitTrustChaincode) ReadFund(stub shim.ChaincodeStubInterface, args []s
 	}
 	fundAsBytes, err := stub.GetState(fundId)
 
-	// err = json.Unmarshal(fundAsBytes, &fund)
+	iterator, err := stub.GetStateByPartialCompositeKey(TRANSACTION_HISTORY,[]string{args[0]})
+	if err != nil {
+		return shim.Error("Couldn't Create Result iterator"+err.Error())
+	}
+	var buffer bytes.Buffer
+	var firstRow = true
+	
+	buffer.WriteString(`{ "fund" : `)
+	buffer.Write(fundAsBytes)
+	buffer.WriteString(`, "txnHistory":[`)
 
-	return shim.Success(fundAsBytes)
+	for iterator.HasNext() {
+		queryResponse, err := iterator.Next()
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		if firstRow != true {
+			buffer.WriteString(",")
+		}
+		assetAddress := string(queryResponse.Key)
+		assetAsBytes, err :=stub.GetState(assetAddress)
+		if err != nil {
+			return shim.Error("Failed to get state of asset : address "+ assetAddress+" err: "+err.Error())
+		}
+		buffer.Write(assetAsBytes)
+		firstRow = false
+	}
+	buffer.WriteString(`]}`)
+
+	return shim.Success(buffer.Bytes())
 }
 
+// Create HQ account
 func (t *UnitTrustChaincode) CreateAccount(stub shim.ChaincodeStubInterface, args []string) pb.Response{
 	// args check : should be name, type
 	if len(args) != 2 {
@@ -99,13 +129,50 @@ func (t *UnitTrustChaincode) CreateAccount(stub shim.ChaincodeStubInterface, arg
 	account.Name = args[0]
 	account.Type = args[1]
 	account.AccountId = cert.Subject.CommonName
-
+	account.Status = true
 	accountAsBytes, err := json.Marshal(account)
 	if err != nil {
 		return shim.Error("Failed to marshal account : "+err.Error())
 	}
 	
 	
+	err = stub.PutState(compositeKey, accountAsBytes)
+	if err != nil {
+		return shim.Error("Failed to put state account : "+ err.Error())
+	}
+	return shim.Success(nil)
+}
+
+// Create HQ account
+func (t *UnitTrustChaincode) ApproveAccount(stub shim.ChaincodeStubInterface, args []string) pb.Response{
+	// args check : should be name
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1, got "+ strconv.Itoa(len(args)))
+	}
+	cert, err := cid.GetX509Certificate(stub)
+	if err != nil {
+		return shim.Error("Error Parsing Certificate : "+ err.Error())
+	}
+	compositeKey, err := stub.CreateCompositeKey(AGENT,[]string{cert.Subject.CommonName})
+
+	accountAsBytes, err := stub.GetState(compositeKey)
+	if err != nil {
+		return shim.Error("Failed to get state account : "+ err.Error())
+	}
+	account := Account{}
+	err = json.Unmarshal( accountAsBytes, &account)
+	if err != nil {
+		return shim.Error("Failed to unmarshal account : "+ err.Error())
+	}
+
+	account.Status = true // account approved
+	
+	accountAsBytes, err = json.Marshal(account)
+	if err != nil {
+		return shim.Error("Failed to marshal account : "+err.Error())
+	}
+	
+	// put state to ledger
 	err = stub.PutState(compositeKey, accountAsBytes)
 	if err != nil {
 		return shim.Error("Failed to put state account : "+ err.Error())

@@ -22,4 +22,5 @@ type Account struct {
 	AccountId	string		`json:"accountId"`
 	Name		string		`json:"name"`
 	Type		string		`json:"type"`
+	Status		bool		`json:"status"`
 }
