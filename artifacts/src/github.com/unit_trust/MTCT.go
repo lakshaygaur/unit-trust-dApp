@@ -153,7 +153,7 @@ func (t *UnitTrustChaincode) ApproveAccount(stub shim.ChaincodeStubInterface, ar
 	if err != nil {
 		return shim.Error("Error Parsing Certificate : "+ err.Error())
 	}
-	compositeKey, err := stub.CreateCompositeKey(AGENT,[]string{cert.Subject.CommonName})
+	compositeKey, err := stub.CreateCompositeKey(ACCOUNT,[]string{AGENT,cert.Subject.CommonName})
 
 	accountAsBytes, err := stub.GetState(compositeKey)
 	if err != nil {
@@ -177,5 +177,22 @@ func (t *UnitTrustChaincode) ApproveAccount(stub shim.ChaincodeStubInterface, ar
 	if err != nil {
 		return shim.Error("Failed to put state account : "+ err.Error())
 	}
+	return shim.Success(nil)
+}
+
+
+// Deletes a fund from state
+func (t *UnitTrustChaincode) DeleteFund(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	// args check : should be fundId
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1, got "+ strconv.Itoa(len(args)))
+	}
+
+	// Delete the key from the state in ledger
+	err := stub.DelState(args[0])
+	if err != nil {
+		return shim.Error("Failed to delete state")
+	}
+
 	return shim.Success(nil)
 }

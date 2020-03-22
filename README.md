@@ -1,8 +1,18 @@
-## Balance transfer
+## Unit Trust Blockchain dApp
 
-A sample Node.js app to demonstrate **__fabric-client__** & **__fabric-ca-client__** Node.js SDK APIs
+A blockchain network for a Unit Trust company called MTCT including a headquarter (HQ), Two branches, Two financial advisers(agent), and Six investors. The HQ and its branches maintain the network. All agree on the type of assets e.g Bond, Equity etc. to create on the network. An agent service two investors. Investors view only assets on the network. The HQ and branches can view all agents, assets, and investors on the network. The HQ and branches all agree before adopting any new policy. Investors can buy or sell their fund back to MTCT.
 
-### Prerequisites and setup:
+
+
+### User Story
+* Agent can apply to join the network.
+* Agent can sell fund to investor.
+* Investor can view the type of available fund on the network.
+* Branch office can onboard agents on the network.
+* MTCT can accept or reject application to join the network.
+* MTCT can create or destroy any fund from the network.
+
+### Prerequisites:
 
 * [Docker](https://www.docker.com/products/overview) - v1.12 or higher
 * [Docker Compose](https://docs.docker.com/compose/overview/) - v1.8 or higher
@@ -10,96 +20,49 @@ A sample Node.js app to demonstrate **__fabric-client__** & **__fabric-ca-client
 * **Node.js** v8.4.0 or higher
 * [Download Docker images](http://hyperledger-fabric.readthedocs.io/en/latest/samples.html#binaries)
 
-```
-cd fabric-samples/balance-transfer/
-```
-
-Once you have completed the above setup, you will have provisioned a local network with the following docker container configuration:
-
-* 2 CAs
-* A SOLO orderer
-* 4 peers (2 peers per Org)
-
-#### Artifacts
-* Crypto material has been generated using the **cryptogen** tool from Hyperledger Fabric and mounted to all peers, the orderering node and CA containers. More details regarding the cryptogen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html#crypto-generator).
-* An Orderer genesis block (genesis.block) and channel configuration transaction (mychannel.tx) has been pre generated using the **configtxgen** tool from Hyperledger Fabric and placed within the artifacts folder. More details regarding the configtxgen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html#configuration-transaction-generator).
-
-## Running the sample program
-
-There are two options available for running the balance-transfer sample
-For each of these options, you may choose to run with chaincode written in golang or in node.js.
-
-### Option 1:
-
+### Setup: 
 ##### Terminal Window 1
-
-* Launch the network using docker-compose
-
 ```
-docker-compose -f artifacts/docker-compose.yaml up
+cd artifacts
+docker-compose up
 ```
 ##### Terminal Window 2
-
-* Install the fabric-client and fabric-ca-client node modules
-
 ```
 npm install
+node dev/dev_script/channel_script.js
 ```
+Wait for script to bootstrap the network. Then start the application with following command -
 
-* Start the node app on PORT 4000
+` node app.js `
+The application by defualt runs on PORT=4000. You can change it in *config.json*
 
+Once you have completed the above setup, you will have provisioned a local network with the following docker container configuration:
+* 3 Orgs -
+* * Hq (MTCT Headquarter)
+* * Branch 1
+* * Branch 2
+* 2 CAs
+* A SOLO orderer
+* 3 peers (1 peers per Org)
+
+#### Artifacts
+* Crypto material has been generated using the **cryptogen** tool from Hyperledger Fabric and mounted to all peers, the orderering node and CA containers.
+* An Orderer genesis block (genesis.block) and channel configuration transaction (mychannel.tx) has been pre generated using the **configtxgen** tool from Hyperledger Fabric and placed within the artifacts folder.
+
+
+## REST APIs
+
+### Generate Certificate
+
+* Register and enroll new users in Organization - **Hq**, **Branch1** or **Branch2**:
 ```
-PORT=4000 node app
+curl --location --request POST 'http://localhost:4000/users' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"username":"JimFromHq",
+	"orgName":"Hq"
+}'
 ```
-
-##### Terminal Window 3
-
-* Execute the REST APIs from the section [Sample REST APIs Requests](https://github.com/hyperledger/fabric-samples/tree/master/balance-transfer#sample-rest-apis-requests)
-
-
-### Option 2:
-
-##### Terminal Window 1
-
-```
-cd fabric-samples/balance-transfer
-
-./runApp.sh
-
-```
-
-* This lauches the required network on your local machine
-* Installs the fabric-client and fabric-ca-client node modules
-* And, starts the node app on PORT 4000
-
-##### Terminal Window 2
-
-
-In order for the following shell script to properly parse the JSON, you must install ``jq``:
-
-instructions [https://stedolan.github.io/jq/](https://stedolan.github.io/jq/)
-
-With the application started in terminal 1, next, test the APIs by executing the script - **testAPIs.sh**:
-```
-cd fabric-samples/balance-transfer
-
-## To use golang chaincode execute the following command
-
-./testAPIs.sh -l golang
-
-## OR use node.js chaincode
-
-./testAPIs.sh -l node
-```
-
-
-## Sample REST APIs Requests
-
-### Login Request
-
-* Register and enroll new users in Organization - **Org1**:
-
-`curl -s -X POST http://localhost:4000/users -H "content-type: application/x-www-form-urlencoded" -d 'username=Jim&orgName=Org1'`
 
 **OUTPUT:**
 
@@ -114,219 +77,198 @@ cd fabric-samples/balance-transfer
 
 The response contains the success/failure status, an **enrollment Secret** and a **JSON Web Token (JWT)** that is a required string in the Request Headers for subsequent requests.
 
-### Create Channel request
+### MTCT - Create Account
 
 ```
-curl -s -X POST \
-  http://localhost:4000/channels \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json" \
-  -d '{
-	"channelName":"mychannel",
-	"channelConfigPath":"../artifacts/channel/mychannel.tx"
+curl --location --request POST 'http://localhost:4000/mtct/createAccount' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"type": "MTCT"
 }'
+```
+**OUTPUT:**
+
+```
+{
+    "status": "ok",
+    "msg": "account created successfully"
+}
 ```
 
 Please note that the Header **authorization** must contain the JWT returned from the `POST /users` call
 
-### Join Channel request
+### MTCT - Create Fund
 
 ```
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/peers \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["peer0.org1.example.com","peer1.org1.example.com"]
+curl --location --request POST 'http://localhost:4000/mtct/createFund' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <jwt token>' \
+--data-raw '{
+	"type": "Bond",
+	"value": "$1300",
+	"validFrom": "03-02-2019",
+	"validTo": "03-02-2021"
 }'
 ```
-### Install chaincode
-
-```
-curl -s -X POST \
-  http://localhost:4000/chaincodes \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["peer0.org1.example.com","peer1.org1.example.com"],
-	"chaincodeName":"mycc",
-	"chaincodePath":"github.com/example_cc/go",
-	"chaincodeType": "golang",
-	"chaincodeVersion":"v0"
-}'
-```
-**NOTE:** *chaincodeType* must be set to **node** when node.js chaincode is used and *chaincodePath* must be set to the location of the node.js chaincode. Also put in the $PWD
-```
-ex:
-curl -s -X POST \
-  http://localhost:4000/chaincodes \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["peer0.org1.example.com","peer1.org1.example.com"],
-	"chaincodeName":"mycc",
-	"chaincodePath":"$PWD/artifacts/src/github.com/example_cc/node",
-	"chaincodeType": "node",
-	"chaincodeVersion":"v0"
-}'
-```
-
-### Instantiate chaincode
-
-This is the endorsement policy defined during instantiation.
-This policy can be fulfilled when members from both orgs sign the transaction proposal.
+**OUTPUT:**
 
 ```
 {
-	identities: [{
-			role: {
-				name: 'member',
-				mspId: 'Org1MSP'
-			}
-		},
-		{
-			role: {
-				name: 'member',
-				mspId: 'Org2MSP'
-			}
-		}
-	],
-	policy: {
-		'2-of': [{
-			'signed-by': 0
-		}, {
-			'signed-by': 1
-		}]
-	}
+    "status": "ok",
+    "msg": "fund created successfully",
+    "txnIDd": "7f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191"
 }
 ```
 
+### MTCT - Read Fund with Transaction History
+
 ```
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json" \
-  -d '{
-	"chaincodeName":"mycc",
-	"chaincodeVersion":"v0",
-	"chaincodeType": "golang",
-	"args":["a","100","b","200"]
+curl --location --request GET 'http://localhost:4000/mtct/readFund/7f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191' \
+--header 'Authorization: Bearer <jwt token>'
+```
+**OUTPUT:**
+
+```
+{
+  "fund": {
+    "fundId": "\u0000FUND\u00007f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191\u0000",
+    "type": "Bond",
+    "value": "$1300",
+    "validFrom": "03-02-2019",
+    "validTo": "03-02-2021",
+    "owner": "InvestorBranch1"
+  },
+  "txnHistory": [
+    {
+      "txnId": "\u0000TRANSACTION_HISTORY\u00007f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191\u000020a8bf0f53ca31df9b9f2df496da4c470928a7a56b719fe90ddad54e67653634\u0000",
+      "status": "Fund: Bond sold to InvestorBranch1",
+      "timestamp": "seconds:1584867118 nanos:902000000 "
+    },
+    {
+      "txnId": "\u0000TRANSACTION_HISTORY\u00007f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191\u00007f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191\u0000",
+      "status": "Fund: Bond created by JimFromHq",
+      "timestamp": "seconds:1584865813 nanos:546000000 "
+    }
+  ]
+}
+```
+### MTCT - Approve agent's account
+```
+curl --location --request POST 'http://localhost:4000/mtct/approveAccount' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <Jwt token>' \
+--data-raw '{
+	"agentId": "JimAgent"
 }'
 ```
-**NOTE:** *chaincodeType* must be set to **node** when node.js chaincode is used
+**OUTPUT:**
 
-### Invoke request
-
-This invoke request is signed by peers from both orgs, *org1* & *org2*.
 ```
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/mycc \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
-	"fcn":"move",
-	"args":["a","b","10"]
+{
+    "status": "ok",
+    "msg": "account approved successfully",
+    "txnIDd": "b6dbcafbc641b3cd097e1b9e4c4d98195834cb89b70c64682046f82638abfeb8"
+}
+```
+
+### MTCT - Approve agent's account
+```
+curl --location --request POST 'http://localhost:4000/mtct/deleteFund' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <jwt token>' \
+--data-raw '{
+	"fundId": "7f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191"
 }'
 ```
-**NOTE:** Ensure that you save the Transaction ID from the response in order to pass this string in the subsequent query transactions.
-
-### Chaincode Query
+**OUTPUT:**
 
 ```
-curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=query&args=%5B%22a%22%5D" \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json"
+{
+    "status": "ok",
+    "msg": "fund deleted successfully",
+    "txnIDd": "17ee70e4f781ba274dab9e76ea810cae8f59e6f6c91262413c51ff766bc8c714"
+}
 ```
-
-### Query Block by BlockNumber
-
+### Investor - Read all funds available in network
 ```
-curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/blocks/1?peer=peer0.org1.example.com" \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json"
+curl --location --request GET 'http://localhost:4000/investor/readAllFunds' \
+--header 'Authorization: Bearer <JWT TOKEN of investor>'
 ```
-
-### Query Transaction by TransactionID
+**OUTPUT:**
 
 ```
-curl -s -X GET http://localhost:4000/channels/mychannel/transactions/<put transaction id here>?peer=peer0.org1.example.com \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json"
-```
-**NOTE**: The transaction id can be from any previous invoke transaction, see results of the invoke request, will look something like `8a95b1794cb17e7772164c3f1292f8410fcfdc1943955a35c9764a21fcd1d1b3`.
-
-
-### Query ChainInfo
-
-```
-curl -s -X GET \
-  "http://localhost:4000/channels/mychannel?peer=peer0.org1.example.com" \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json"
-```
-
-### Query Installed chaincodes
-
-```
-curl -s -X GET \
-  "http://localhost:4000/chaincodes?peer=peer0.org1.example.com&type=installed" \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json"
+{
+  "funds": [
+    {
+      "fundId": "\u0000FUND\u00004391875f6830151af64e17bc6f6f587ab474bf7fe86302f990526d68af5e855c\u0000",
+      "type": "Bond",
+      "value": "$1300",
+      "validFrom": "03-02-2019",
+      "validTo": "03-02-2021",
+      "owner": "JimFromHq"
+    },
+    {
+      "fundId": "\u0000FUND\u00007f1dbcc6b242a1327083e5dbcf49ce2ee99ef9460c375eb9e065c1b4602da191\u0000",
+      "type": "Equity",
+      "value": "$100",
+      "validFrom": "03-06-2020",
+      "validTo": "03-05-2021",
+      "owner": "TimFromHq"
+    }
+  ]
+}
 ```
 
-### Query Instantiated chaincodes
+### Agent - Apply for account
+**NOTE**: Agent first needs to be register and enrolled from either of the Branch orgs. Only then agent can apply to join the network and get his account approved from MTCT(HQ).
+```
+curl --location --request POST 'http://localhost:4000/agent/applyAccount' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <Jwt token of agent>' \
+--data-raw '{
+	"type": "AGENT"
+}'
+```
+**OUTPUT:**
+```
+{
+    "status": "ok",
+    "msg": "applied for account successfully"
+}
+```
 
+### Agent - Sell funds 
+**NOTE**: This request will result in error if the agent's account has not been approved from MTCT first.
 ```
-curl -s -X GET \
-  "http://localhost:4000/chaincodes?peer=peer0.org1.example.com&type=instantiated" \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json"
+curl --location --request POST 'http://localhost:4000/agent/sellFund' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <Jwt token of agent>' \
+--data-raw '{
+	"fundId": "6ffe82f0c4dba64d4d3a8c8609861f24c4c083486e96ca63772fbb3c134b0f6c",
+	"sellingTo": "InvestorBranch1"
+}'
 ```
 
-### Query Channels
-
-```
-curl -s -X GET \
-  "http://localhost:4000/channels?peer=peer0.org1.example.com" \
-  -H "authorization: Bearer <put JSON Web Token here>" \
-  -H "content-type: application/json"
-```
+## To Do
+- [x] Agent can apply to join the network.
+- [x] Agent can sell fund to investor.
+- [x] Investor can view the type of available fund on the network.
+- [x] Branch office can onboard agents on the network.
+- [x] MTCT can accept or reject application to join the network.
+- [x] MTCT can create or destroy any fund from the network.
+- [ ] Investor can buy or sell fund.
+- [ ] Branch office can create a private route to transact
+- [ ] MTCT can reject application of an agent to join the network
 
 ### Clean the network
 
 The network will still be running at this point. Before starting the network manually again, here are the commands which cleans the containers and artifacts.
 
 ```
-docker rm -f $(docker ps -aq)
-docker rmi -f $(docker images | grep dev | awk '{print $3}')
-rm -rf fabric-client-kv-org[1-2]
+cd artifacts/
+docker-compose down
+cd -
+./dev/dev_script/deleteImages.sh
 ```
 
-### Network configuration considerations
 
-You have the ability to change configuration parameters by either directly editing the network-config.yaml file or provide an additional file for an alternative target network. The app uses an optional environment variable "TARGET_NETWORK" to control the configuration files to use. For example, if you deployed the target network on Amazon Web Services EC2, you can add a file "network-config-aws.yaml", and set the "TARGET_NETWORK" environment to 'aws'. The app will pick up the settings inside the "network-config-aws.yaml" file.
-
-#### IP Address** and PORT information
-
-If you choose to customize your docker-compose yaml file by hardcoding IP Addresses and PORT information for your peers and orderer, then you MUST also add the identical values into the network-config.yaml file. The url and eventUrl settings will need to be adjusted to match your docker-compose yaml file.
-
-```
-peer1.org1.example.com:
-  url: grpcs://x.x.x.x:7056
-  eventUrl: grpcs://x.x.x.x:7058
-
-```
-
-#### Discover IP Address
-
-To retrieve the IP Address for one of your network entities, issue the following command:
-
-```
-# this will return the IP Address for peer0
-docker inspect peer0 | grep IPAddress
-```
-
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.

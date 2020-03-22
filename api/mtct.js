@@ -19,7 +19,7 @@ router.post('/createAccount',async function(req,res){
 
         return res.send({
             status: 'ok',
-            msg: 'fund created successfully'
+            msg: 'account created successfully'
         })
     } catch (error) {
         return res.send({
@@ -65,6 +65,46 @@ router.get('/readFund/:fundId',async function(req,res){
 
         let queryRes = await queryChaincode(peers[0], config.channelName, config.chaincodeName, args, 'readFund', req.username, req.orgname)
         return res.send(JSON.parse(queryRes))
+    } catch (error) {
+        return res.send({
+            status: 'failed',
+            msg: error.message
+        })
+    }
+})
+
+router.post('/approveAccount',async function(req,res){
+    try {
+        let peers = await helper.getPeers(req.orgname)
+        let args = []
+        args.push(req.body.agentId)
+
+        let queryRes = await invokeChaincode(peers, config.channelName, config.chaincodeName, 'approveAccount', args, req.username, req.orgname)
+        return res.send({
+            status: 'ok',
+            msg: 'account approved successfully',
+            txnIDd : invokeRes
+        })
+    } catch (error) {
+        return res.send({
+            status: 'failed',
+            msg: error.message
+        })
+    }
+})
+
+router.post('/deleteFund',async function(req,res){
+    try {
+        let peers = await helper.getPeers(req.orgname)
+        let args = []
+        args.push(req.body.fundId)
+
+        let invokeRes = await invokeChaincode(peers, config.channelName, config.chaincodeName, 'deleteFund', args, req.username, req.orgname)
+        return res.send({
+            status: 'ok',
+            msg: 'fund deleted successfully',
+            txnIDd : invokeRes
+        })
     } catch (error) {
         return res.send({
             status: 'failed',

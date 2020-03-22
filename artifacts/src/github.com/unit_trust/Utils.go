@@ -30,14 +30,14 @@ func getUser(stub shim.ChaincodeStubInterface) (*Account , error) {
 	return account,nil
 }
 
-
+// getUser returns Account of Agent invoking the transaction.
 func getAgent(stub shim.ChaincodeStubInterface) (*Account , error) {
 	account := &Account{}
 	cert, err := cid.GetX509Certificate(stub)
 	if err != nil {
 		return nil, errors.New("Error Parsing Certificate : "+ err.Error())
 	}
-	compositeKey,err := stub.CreateCompositeKey(AGENT,[]string{cert.Subject.CommonName})
+	compositeKey,err := stub.CreateCompositeKey(ACCOUNT,[]string{AGENT,cert.Subject.CommonName})
 	if err !=nil {
 		return nil,errors.New("Error creating composite Key : "+err.Error())
 	}
